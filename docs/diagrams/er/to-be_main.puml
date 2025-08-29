@@ -1,0 +1,94 @@
+@startuml
+
+Entity User {
+  * id : integer <<generated>>
+  --
+  * name : string
+  * email : string
+  * password_hash : string
+  * password_salt : string <<generated on password change>>
+  * enabled : boolean
+  * created : datetime <<generated>>
+  * modified : datetime <<generated>>
+}
+
+Entity House {
+  * id : integer <<generated>>
+  * user_id : integer <<FK>>
+  --
+  * name : string
+  * created : datetime <<generated>>
+  * modified : datetime <<generated>>
+  KLADR_code : integer
+  address : string
+  latitude : float
+  longitude : float
+}
+
+Entity DeviceVendor {
+  * id : integer <<generated>>
+  --
+  * name : string
+  logo : blob
+}
+
+Entity DeviceModel {
+  * id : integer <<generated>>
+  * vendor_id : integer <<FK>>
+  --
+  * name : string
+  capabilities : JSON
+  default_settings : JSON
+}
+
+Entity Device {
+  * id : integer <<generated>>
+  * house_id : integer <<FK>>
+  * model_id : integer <<FK>>
+  --
+  * name : string
+  * hardware_address : string
+  * created : datetime <<generated>>
+  * modified : datetime <<generated>>
+  * enabled : boolean
+  status : JSON
+  settings : JSON
+}
+
+Entity MeasurementUnit {
+  * id : integer <<generated>>
+  --
+  * name : string
+  * symbol : string
+  * factor : float
+}
+
+Entity Measurement {
+  * id : integer <<generated>>
+  * device_id : integer <<FK>>
+  * unit_id : integer <<FK>>
+  --
+  * value_type : enum <<generated>>
+  * value_f : float
+  * value_i : integer
+  * value_s : string
+  * date : datetime <<generated>>
+}
+
+Entity Payment {
+  * id : integer <<generated>>
+  * user_id : integer <<FK>>
+  --
+  * date : datetime <<generated>>
+  * amount : integer
+}
+
+User ||---o{ Payment
+User ||---o{ House
+House ||---o{ Device
+Device ||---o{ Measurement
+DeviceModel ||---o{ DeviceVendor
+DeviceModel ||---o{ Device
+MeasurementUnit ||---o{ Measurement
+
+@enduml

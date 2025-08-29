@@ -1,0 +1,50 @@
+@startuml
+
+!include <C4/C4_Component.puml>
+
+title ООО «Тёплый Дом» - Диаграмма Компонентов - API Сервер
+
+LAYOUT_WITH_LEGEND()
+
+Container(shs.app, "Пользовательское приложение", "iOS/Android/Electron/Web/...")
+Container(shs.agg, "Агрегатор", "MQTT,XMLRPC,...")
+Container(shs.adm, "Административный интерфейс", "web-портал")
+Container_Boundary(shs.api.user, "API-сервер (пользовательская часть)") {
+    Component(shs.api.user.session, "Словарь пользовательских сессий", "Redis/Memcache")
+    Component(shs.api.user.account, "API Кабинета пользователя", "HTTP/REST")
+    Component(shs.api.user.device_state, "Словарь состояний устройств", "Redis/Memcache")
+    Component(shs.api.user.device_service, "Брокер состояний устройств", "HTTP/REST")
+}
+
+ContainerDb(shs.dev_db, "Исторические данные\nс устройств", "TSDB")
+ContainerDb(shs.acc_db, "Кабинеты\nпользователей", "SQL")
+
+Container_Boundary(shs.api.admin, "API-сервер (администраторская часть)") {
+    Component(shs.api.admin.account, "API Управления кабинетами пользователей", "HTTP/REST")
+    Component(shs.api.admin.session, "Словарь администраторских сессий", "Redis/Memcache")
+}
+
+System(ldap, "Каталог учётных записей компании", "OpenLDAP/Microsoft AD/...")
+
+
+Rel(shs.agg, shs.api.user.device_service, "Запрашивает список,\nсохраняет состояние")
+
+Rel(shs.app, shs.api.user.account, "Асинхронные Запросы", "REST/WebSocket")
+
+Rel_R(shs.api.user.account, shs.api.user.device_state, "читает состояние\nобновляет список")
+Rel(shs.api.user.account, shs.acc_db, "чтение\nзапись", "ORM")
+Rel(shs.api.user.account, shs.dev_db, "читает\nисторические\nданные", "ORM")
+Rel_L(shs.api.user.account, shs.api.user.session, "Авторизация")
+
+Rel_U(shs.api.admin.account, shs.acc_db, "чтение\nзапись", "ORM")
+Rel_U(shs.api.admin.account, shs.dev_db, "чтение\nзапись", "ORM")
+Rel_R(shs.api.admin.account, ldap, "Аутентификация", "LDAP")
+Rel_L(shs.api.admin.account, shs.api.admin.session, "Авторизация")
+
+Rel_U(shs.adm, shs.api.admin.account, "Асинхронные Запросы", "REST/WebSocket")
+
+
+Rel_L(shs.api.user.device_service, shs.api.user.device_state, "наполняет на старте,\nобновляет при изменении")
+Rel_D(shs.api.user.device_service, shs.acc_db, "читает список устройств на старте")
+
+@enduml

@@ -1,0 +1,125 @@
+@startuml
+
+Struct DeviceMeasurement {
+    +id: uint64_t
+    +device_id: uint64_t
+    +value: double
+    +unix_timestamp: uint64_t
+    +unit: str
+}
+
+Struct Device {
+    +id: uint64_t
+    +name: str
+    +type: str
+    +address: str
+}
+
+Struct DeviceState {
+    +id: uint64_t
+    +device_id: uint64_t
+    +state: str
+    +unix_timestamp: uint64_t
+}
+
+Class TimeSeriesDatabase {
+    +ctor(): TimeSeriesDatabase
+    +connect(str addr, int port): TimeSeriesDatabaseConnection
+}
+
+Class DataBus {
+    +ctor(): DataBus
+    +connect(str addr, int port): DataBusConnection
+}
+
+Class MemoryStorage {
+    +ctor(): MemoryStorage
+    +connect(str addr, int port): MemoryStorageConnection
+}
+
+Class DeviceListPublisher {
+    -queue: Queue[List[Device]]
+    +ctor(): DevicePublisher
+    +pop(): List[Device]
+    +publishDeviceList(List[Device])
+}
+
+Class TimeSeriesDatabaseConnection {
+    +beginTransaction(): bool
+    +commitTransaction(): bool
+    +rollbackTransaction(): bool
+    +insertMeasurement(DeviceMeasurement): bool
+    +insertState(DeviceState): bool
+}
+
+Class DataBusConnection {
+    - mainThread: Thread
+    +ctor(): DataBusConnection
+    +registerMeasurementReceiver(MeasurementReceiver receiver)
+    +registerDeviceStateReceiver(DeviceStateReceiver receiver)
+    +registerDevicePublisher(DeviceListPublisher publisher)
+}
+
+Class MemoryStorageConnection {
+    - mainThread: Thread
+    +ctor(): MemoryStorageConnection
+    +saveDeviceState(DeviceState)
+    +saveLastMeasurement(DeviceMeasurement)
+    +registerDeviceListReceiver(deviceListReceiver)
+}
+
+Class MeasurementReceiver {
+    +ctor(): MeasurementReceiver
+    +measurementReceived(DeviceMeasurement)
+}
+
+Class DeviceStateReceiver {
+    +ctor(): DeviceStateReceiver
+    +deviceStateReceived(DeviceState)
+}
+
+Class DeviceListReceiver {
+    +ctor(): DeviceListReceiver
+    +deviceListReceived(List[Device])
+    +setPublisher(DeviceListPublisher publisher)
+}
+
+Class Controller {
+    +ctor(): Controller
+    +start(): void
+    +stop(): void
+}
+
+Controller --|> DataBus : creates
+Controller --|> TimeSeriesDatabase : creates
+Controller --|> MemoryStorage : creates
+Controller --|> DeviceListReceiver: creates
+Controller --|> DeviceListPublisher : creates
+Controller ----> MemoryStorageConnection : calls
+Controller ----> DataBusConnection : calls
+
+TimeSeriesDatabase }--|> TimeSeriesDatabaseConnection : creates
+MemoryStorage }--|> MemoryStorageConnection : creates
+DataBus }--|> DataBusConnection : creates
+
+DataBusConnection ----> MeasurementReceiver : calls
+DataBusConnection ----> DeviceStateReceiver : calls
+DataBusConnection ----> DeviceListPublisher : calls
+
+MemoryStorageConnection ----> DeviceListReceiver : calls
+
+DeviceMeasurement --> Device : device_id = Device.id
+DeviceState --> Device : device_id = Device.id
+
+MeasurementReceiver ----> TimeSeriesDatabaseConnection : calls
+MeasurementReceiver ----> MemoryStorageConnection : calls
+
+DeviceStateReceiver ----> TimeSeriesDatabaseConnection : calls
+DeviceStateReceiver ----> MemoryStorageConnection : calls
+
+DeviceListReceiver --|> MeasurementReceiver : creates
+DeviceListReceiver --|> DeviceStateReceiver : creates
+DeviceListReceiver ----> DeviceListPublisher : calls
+
+
+@enduml

@@ -1,0 +1,903 @@
+openapi: 3.0.0
+info:
+  title: "OpenAPI для Кабинета Пользователя"
+  version: "1.0.0"
+  description: "Сервис Кабинета Пользователя, реализующий REST API для работы с данными пользователя и устройствами"
+  contact:
+    name: "Техподдержка системы Умный Дом"
+    email: "support@умный-дом.рф"
+
+servers:
+  - url: "https://api.умный-дом.рф/v1"
+    description: "Сервер для работы с данными пользователя и устройствами"
+
+paths:
+  /confirm:
+    get:
+      summary: "Подтвердить регистрацию пользователя"
+      description: "Этот адрес содержится в ссылке, которую пользователь должен ввести в браузере.<br>Он получает её по email при регистрации."
+      operationId: confirmUser
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: Токен подтверждения регистрации по email
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          links:
+            confirmUser:
+              operationId: confirmUser
+        "400":
+          description: "Запрос некорректен"
+        "404":
+          description: "Не найден пользователь"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users:
+    post:
+      summary: "Создать пользователя"
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                name:
+                  type: string
+                  description: Имя пользователя
+                email:
+                  type: string
+                  description: Email пользователя
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      summary: "Получить информацию о пользователе"
+      operationId: getUser
+      security:
+        - bearerHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "404":
+          description: "Не найден пользователь"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: "Отредактировать информацию о пользователе"
+      operationId: updateUser
+      security:
+        - bearerHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: integer
+                  description: Идентификатор пользователя
+                name:
+                  type: string
+                  description: Имя пользователя
+                email:
+                  type: string
+                  description: Email пользователя
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: "Удалить пользователя"
+      operationId: deleteUser
+      security:
+        - bearerHttpAuthentication: []
+      description: "Нужен только в случае, когда пользователь желает удалить аккаунт. Аккаунт **не удаляется**, пользователь помечается как неактивный."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: integer
+                  description: Идентификатор пользователя
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "404":
+          description: "Не найден пользователь"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users/{userId}/devices:
+    post:
+      summary: "Создать устройство"
+      operationId: createDevice
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRequest"
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      summary: "Получить список устройств пользователя"
+      operationId: getDevices
+      security:
+        - basicHttpAuthentication: []
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceList"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: "Отредактировать информацию об устройстве"
+      operationId: updateDevice
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceUpdateRequest"
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: "Удалить устройство"
+      operationId: deleteDevice
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: integer
+                  description: Идентификатор устройства
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "404":
+          description: "Не найдено устройство"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users/{userId}/devices/{deviceId}/measurements:
+    get:
+      summary: "Получить исторические изменения устройства"
+      operationId: getDeviceMeasurements
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                device_id:
+                  type: integer
+                  description: Идентификатор устройства
+                from:
+                  type: string
+                  format: date-time
+                  description: Дата начала выборки
+                to:
+                  type: string
+                  format: date-time
+                  description: Дата окончания выборки
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeasurementList"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "404":
+          description: "Не найдено устройство"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users/{userId}/houses:
+    post:
+      summary: "Создать дом"
+      operationId: createHouse
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HouseRequest"
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/House"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      summary: "Получить список домов пользователя"
+      operationId: getHouses
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: integer
+                  description: Идентификатор пользователя
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseList"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: "Отредактировать информацию о доме"
+      operationId: updateHouse
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/House"
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/House"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "404":
+          description: "Дом не найден"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: "Удалить дом"
+      operationId: deleteHouse
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                id:
+                  type: integer
+                  description: Идентификатор дома
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+        "400":
+          description: "Запрос некорректен"
+        "404":
+          description: "Дом не найден"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /users/{userId}/measurements:
+    get:
+      summary: "Получить текущие изменения со всех устройств"
+      operationId: getMeasurements
+      security:
+        - basicHttpAuthentication: []
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeasurementList"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "404":
+          description: "Пользователь не найден"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /vendors:
+    get:
+      summary: "Получить список производителей устройств"
+      operationId: getDeviceVendors
+      security:
+        - basicHttpAuthentication: []
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceVendorList"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /models:
+    get:
+      summary: "Получить список моделей устройств для производителя"
+      operationId: getDeviceModels
+      security:
+        - basicHttpAuthentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                vendor_id:
+                  type: integer
+                  description: Идентификатор производителя устройств
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceModelList"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "404":
+          description: "Производитель не найден"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /units:
+    get:
+      summary: "Получить список единиц измерения"
+      operationId: getMeasurementUnits
+      security:
+        - basicHttpAuthentication: []
+      responses:
+        "200":
+          description: "Запрос выполнен успешно"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeasurementUnitList"
+        "400":
+          description: "Запрос некорректен"
+        "401":
+          description: "Запрос не авторизован"
+        "500":
+          description: "Прочие ошибки"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    basicHttpAuthentication:
+      description: Basic HTTP Authentication
+      type: http
+      scheme: Basic
+    bearerHttpAuthentication:
+      description: Bearer session id
+      type: http
+      scheme: Bearer
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Код ошибки
+        message:
+          type: string
+          description: Сообщение об ошибке
+      example:
+        code: 500
+        message: "Сообщение об ошибке"
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор пользователя
+        name:
+          type: string
+          description: Имя пользователя
+        email:
+          type: string
+          description: Email пользователя
+        enabled:
+          type: boolean
+          description: Флаг активности пользователя
+        created:
+          type: string
+          format: date-time
+          description: Дата создания пользователя
+        modified:
+          type: string
+          format: date-time
+          description: Дата последнего изменения пользователя
+      example:
+        id: 1234567890
+        name: "Иван Иванов"
+        email: "ivanivanov@example.com"
+        enabled: true
+        created: "2023-01-01T00:00:00Z"
+    Device:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор устройства
+        house_id:
+          type: integer
+          description: Идентификатор дома
+        model_id:
+          type: integer
+          description: Идентификатор модели устройства
+        name:
+          type: string
+          description: Название устройства
+        hardware_address:
+          type: string
+          description: Адрес устройства
+        created:
+          type: string
+          format: date-time
+          description: Дата создания устройства
+        modified:
+          type: string
+          format: date-time
+          description: Дата последнего изменения устройства
+        enabled:
+          type: boolean
+          description: Флаг активности устройства
+        status:
+          type: object
+          description: Статус устройства
+        settings:
+          type: object
+          description: Настройки устройства
+      example:
+        id: 1234567890
+        house_id: 9876543210
+        model_id: 1234567890
+        name: "Устройство 1"
+        hardware_address: "00:11:22:33:44:55"
+        created: "2023-01-01T00:00:00Z"
+        modified: "2023-01-02T00:00:00Z"
+        enabled: true
+        status:
+          "power": "on"
+          "sensor": "ok"
+          "battery": 47
+          "uptime": 123456789
+          "alarm" : false
+        settings:
+          "temp_interval": 60
+          "temp_max_alarm": 40
+          "temp_min_alarm": 18
+    DeviceUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор устройства
+        house_id:
+          type: integer
+          description: Идентификатор дома
+        model_id:
+          type: integer
+          description: Идентификатор модели устройства
+        name:
+          type: string
+          description: Название устройства
+        hardware_address:
+          type: string
+          description: Адрес устройства
+        enabled:
+          type: boolean
+          description: Флаг активности устройства
+        settings:
+          type: object
+          description: Настройки устройства
+      example:
+        id: 1234567890
+        house_id: 9876543210
+        model_id: 1234567890
+        name: "Устройство 1"
+        hardware_address: "00:11:22:33:44:55"
+        created: "2023-01-01T00:00:00Z"
+        modified: "2023-01-02T00:00:00Z"
+        enabled: true
+        settings:
+          "temp_interval": 60
+          "temp_max_alarm": 40
+          "temp_min_alarm": 18
+    DeviceRequest:
+      type: object
+      properties:
+        house_id:
+          type: integer
+          description: Идентификатор дома
+        model_id:
+          type: integer
+          description: Идентификатор модели устройства
+        name:
+          type: string
+          description: Название устройства
+        hardware_address:
+          type: string
+          description: Адрес устройства
+      example:
+        house_id: 9876543210
+        model_id: 1234567890
+        name: "Устройство 1"
+        hardware_address: "00:11:22:33:44:55"
+    DeviceList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Device"
+    House:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор дома
+        user_id:
+          type: integer
+          description: Идентификатор пользователя
+        name:
+          type: string
+          description: Название дома
+        created:
+          type: string
+          format: date-time
+          description: Дата создания дома
+        modified:
+          type: string
+          format: date-time
+          description: Дата последнего изменения дома
+        KLADR_code:
+          type: integer
+          description: Код Государственного Классификатора Адресов Российской Федерации
+        address:
+          type: string
+          description: Адрес дома
+        latitude:
+          type: number
+          format: float
+          description: Широта дома
+        longitude:
+          type: number
+          format: float
+          description: Долгота дома
+      example:
+        id: 1234567890
+        user_id: 9876543210
+        name: "Новый Домик"
+        created: "2023-01-01T00:00:00Z"
+        modified: "2023-01-02T00:00:00Z"
+        KLADR_code: 770000000007564
+        address: "ул. Академика Зельдовича, 1"
+        latitude: 55.7050892
+        longitude: 37.5644504
+    HouseRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: Идентификатор пользователя
+        name:
+          type: string
+          description: Название дома
+        KLADR_code:
+          type: integer
+          description: Код Государственного Классификатора Адресов Российской Федерации
+        address:
+          type: string
+          description: Адрес дома
+        latitude:
+          type: number
+          format: float
+          description: Широта дома
+        longitude:
+          type: number
+          format: float
+          description: Долгота дома
+      example:
+        id: 1234567890
+        user_id: 9876543210
+        name: "Новый Домик"
+        created: "2023-01-01T00:00:00Z"
+        modified: "2023-01-02T00:00:00Z"
+        KLADR_code: 770000000007564
+        address: "ул. Академика Зельдовича, 1"
+        latitude: 55.7050892
+        longitude: 37.5644504
+    HouseList:
+      type: array
+      items:
+        $ref: "#/components/schemas/House"
+    DeviceVendor:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор производителя устройства
+        name:
+          type: string
+          description: Название производителя устройства
+        logo:
+           type: string
+           description: Логотип производителя устройства в формате Base64
+      example:
+        id: 1234567890
+        name: "Производитель 1"
+        logo: "BASE64_LOGO"
+    DeviceVendorList:
+      type: array
+      items:
+        $ref: "#/components/schemas/DeviceVendor"
+    DeviceModel:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор модели устройства
+        vendor_id:
+          type: integer
+          description: Идентификатор производителя устройства
+        name:
+          type: string
+          description: Название модели устройства
+        capabilities:
+          type: object
+          description: Список возможностей устройства
+        default_settings:
+          type: object
+          description: Список настроек по умолчанию для устройства
+      example:
+        id: 1234567890
+        vendor_id: 9876543210
+        name: "Модель 1"
+        capabilities:
+          "power": true
+          "temp": true
+          "pressure": true
+          "humidity": true
+          "battery": true
+          "uptime": true
+          "alarm" : true
+        default_settings:
+          "temp_max_alarm": 40
+          "temp_min_alarm": 18
+    DeviceModelList:
+      type: array
+      items:
+        $ref: "#/components/schemas/DeviceModel"
+    MeasurementUnit:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор единицы измерения
+        name:
+          type: string
+          description: Название единицы измерения
+        symbol:
+          type: string
+          description: Символ единицы измерения
+      example:
+        id: 1234567890
+        name: "Градусы Цельсия"
+        symbol: "°C"
+    MeasurementUnitList:
+      type: array
+      items:
+        $ref: "#/components/schemas/MeasurementUnit"
+    Measurement:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Идентификатор измерения
+        device_id:
+          type: integer
+          description: Идентификатор устройства
+        unit_id:
+          type: integer
+          description: Идентификатор единицы измерения
+        value:
+          type: string
+          description: Значение измерения, корректно отмасштабированное в нужной единице измерения
+        date:
+          type: string
+          format: date-time
+          description: Дата измерения
+      example:
+        id: 1234567890
+        device_id: 9876543210
+        unit_id: 1234567890
+        value: "25.5"
+        date: "2023-01-01T00:00:00Z"
+    MeasurementList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Measurement"
+
