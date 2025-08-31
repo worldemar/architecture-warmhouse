@@ -1,0 +1,43 @@
+@startuml
+
+!include <C4/C4_Component.puml>
+
+title ООО «Тёплый Дом» - Диаграмма Компонентов - Агрегатор
+
+LAYOUT_WITH_LEGEND()
+
+Boundary(user_property, "Собственность клиента") {
+    System_Ext(user.home, "Дом клиента") {
+        Container_Ext(user.device1, "Устройство 1", "Производитель 1")
+        Container_Ext(user.device2, "Устройство 2", "Производитель 1")
+        Container_Ext(user.device3, "Устройство 3", "Производитель 2")
+    }
+}
+
+Container_Boundary(shs.agg, "Агрегатор") {
+    Component(shs.agg.driver1, "Шлюз 1", "Адаптер протокола")
+    Component(shs.agg.driver2, "Шлюз 2", "Адаптер протокола")
+    ComponentQueue(shs.agg.queue, "Шина данных", "RabbitMQ или аналог", "единый формат сообщений для устройств")
+    Component(shs.agg.controller, "Контроллер", "Управляет устройствами", "хранит словарь текущих подключенных и оплаченных устройств в ОЗУ")
+}
+
+ContainerDb(shs.dev_db, "Исторические данные\nс устройств", "TSDB")
+Container_Boundary(shs.api, "API-сервер") {
+    Component(shs.api.device_state, "Брокер состояний устройств", "Redis/Memcache")
+}
+
+
+Rel_U(shs.agg.driver1, user.device1, "Мониторит и управляет", "Протокол 1")
+Rel_U(shs.agg.driver1, user.device2, "Мониторит и управляет", "Протокол 1")
+Rel_U(shs.agg.driver2, user.device3, "Мониторит и управляет", "Протокол 2")
+
+Rel(shs.agg.driver1, shs.agg.queue, "чтение\nзапись", "pub/sub")
+Rel(shs.agg.driver2, shs.agg.queue, "чтение\nзапись", "pub/sub")
+
+Rel_U(shs.agg.controller, shs.agg.queue, "чтение\nзапись", "pub/sub")
+Rel(shs.agg.controller, shs.dev_db, "запись", "ORM")
+
+Rel(shs.agg.controller, shs.api.device_state, "Запрашивает список,\nсохраняет состояние")
+
+
+@enduml

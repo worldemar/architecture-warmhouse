@@ -1,0 +1,147 @@
+openapi: 3.0.0
+
+info:
+  title: "OpenAPI для Temperature API"
+  version: "1.0.0"
+  description: "Сервис для получения данных о температуре"
+  contact:
+    name: "Техподдержка системы Умный Дом"
+    email: "support@умный-дом.рф"
+
+servers:
+  - url: "https://api.мой-обогрев.народ.рф/v1"
+    description: "Сервер для работы Temperature API"
+
+paths:
+  /health:
+    get:
+      summary: "Проверка доступности сервиса"
+      description: "Проверка доступности сервиса"
+      responses:
+        "200":
+          description: "Сервис доступен"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: "Статус сервиса"
+                    enum:
+                      - "ok"
+                required:
+                  - status
+  /temperature:
+    get:
+      summary: "Получение температуры по местоположению"
+      parameters:
+        - name: location
+          in: query
+          description: "Местоположение датчика"
+          required: true
+          schema:
+            $ref: "#/components/schemas/Location"
+      responses:
+        "200":
+          description: "Температура по местоположению"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemperatureData"
+        "400":
+          description: "Запрос некорректен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /temperature/{id}:
+    get:
+      summary: "Получение температуры по идентификатору датчика"
+      parameters:
+        - name: id
+          in: path
+          description: "Идентификатор датчика"
+          required: true
+          schema:
+            $ref: "#/components/schemas/SensorID"
+      responses:
+        "200":
+          description: "Температура по идентификатору датчика"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemperatureData"
+        "400":
+          description: "Запрос некорректен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+ 
+components:
+  schemas:
+    TemperatureData:
+      type: object
+      properties:
+        value:
+          type: number
+          format: float
+          description: "Значение температуры"
+        unit:
+          $ref: "#/components/schemas/SensorUnit"
+        timestamp:
+          type: string
+          format: date-time
+          description: "Время получения данных"
+        location:
+          $ref: "#/components/schemas/Location"
+        status:
+          $ref: "#/components/schemas/SensorStatus"
+        sensor_id:
+          $ref: "#/components/schemas/SensorID"
+        sensor_type:
+          $ref: "#/components/schemas/SensorType"
+        description:
+          type: string
+          description: "Описание датчика"
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "Ошибка"
+      required:
+        - error
+    Location:
+      type: string
+      description: "Местоположение датчика"
+      enum:
+        - "Unknown"
+        - "Living Room"
+        - "Bedroom"
+        - "Kitchen"
+    SensorID:
+      type: string
+      description: "Идентификатор датчика"
+      enum:
+        - "0"
+        - "1"
+        - "2"
+        - "3"
+    SensorType:
+      type: string
+      description: "Тип датчика"
+      enum:
+        - "temperature"
+    SensorStatus:
+      type: string
+      description: "Статус датчика"
+      enum:
+        - "active"
+        - "inactive"
+    SensorUnit:
+      type: string
+      description: "Единица измерения температуры"
+      enum:
+        - "°C"

@@ -1,0 +1,59 @@
+@startuml
+
+!include <C4/C4_Container.puml>
+
+title ООО «Тёплый Дом» - Диаграмма контейнеров - Проектируемая система
+
+LAYOUT_WITH_LEGEND()
+SHOW_PERSON_OUTLINE()
+
+System_Ext(banking, "Банк", "Внешняя система оплаты")
+System_Ext(chatting, "Мессенджер", "Внешняя система коммуникации")
+
+Boundary(user_property, "Собственность клиента") {
+    Person_Ext(user, "User", "Клиент")
+    System_Boundary(user.home, "Дом клиента") {
+        Container_Ext(user.device, "Устройство", "Сторонний производитель")
+    }
+}
+
+Boundary(client_relations, "Департамент по работе с клиентами") {
+    Person(manager, "Manager", "Менеджер")
+    Person(techsupport, "Technician", "Техподдержка")
+}
+
+System_Boundary(shs, "«Умные Устройства»") {
+    Container(shs.app, "Пользовательское приложение", "iOS/Android/Electron/Web/...")
+    Container(shs.agg, "Агрегатор", "MQTT,XMLRPC,...")
+    Container(shs.adm, "Административный интерфейс", "web-портал")
+    Container(shs.api, "API-сервер", "HTTP/REST")
+    ContainerDb(shs.dev_db, "Исторические данные\nс устройств", "TSDB")
+    ContainerDb(shs.acc_db, "Кабинеты\nпользователей", "SQL")
+}
+
+System(ldap, "Каталог учётных записей компании", "OpenLDAP/Microsoft AD/...")
+
+
+Rel_R(techsupport, shs.adm, "Использует")
+
+Rel_R(shs.adm, shs.api, "Асинхронные Запросы", "REST/WebSocket")
+
+Rel_D(shs.agg, shs.api, "Запрашивает\nсловарь\nустройств", "REST")
+Rel_D(shs.agg, shs.dev_db, "Хранит\nданные", "ORM")
+Rel_U(shs.agg, user.device, "Мониторит и управляет", "Протокол\nустройства")
+
+Rel_D(shs.api, shs.acc_db, "чтение\nзапись", "ORM")
+Rel_R(shs.api, shs.dev_db, "чтение", "ORM")
+Rel_D(shs.api, ldap, "Аутентификация", "LDAP")
+
+Rel_D(shs.app, shs.api, "Асинхронные Запросы", "REST/WebSocket")
+Rel_U(shs.app, banking, "Оплата услуг", "Перенаправляет пользователя")
+Rel_U(shs.app, chatting, "Чат с техподдержкой", "Перенаправляет пользователя")
+
+Rel_R(manager, techsupport, "Внутренняя коммуникация", "трекер задач")
+Rel_U(manager, chatting, "Работает с клиентами")
+
+Rel_L(user, user.device, "Устанавливает")
+Rel_D(user, shs.app, "Использует")
+
+@enduml

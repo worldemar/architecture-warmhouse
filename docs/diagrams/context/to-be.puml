@@ -1,0 +1,40 @@
+@startuml
+
+!include <C4/C4_Context.puml>
+
+LAYOUT_WITH_LEGEND()
+SHOW_PERSON_OUTLINE()
+
+title ООО «Тёплый Дом» - Диаграмма контекстов - Проектируемая система
+
+System_Ext(banking, "Банк", "Внешняя система оплаты")
+System_Ext(chatting, "Мессенджер", "Внешняя система коммуникации")
+
+Boundary(user_property, "Собственность заказчика") {
+    Person_Ext(user, "User", "Клиент")
+    System_Ext(home, "Home", "Дом клиента")
+}
+
+System(smart_home_system, "«Умные устройства»", "Система управления устройствами в доме")
+System(ldap, "Каталог учётных записей компании", "OpenLDAP/Microsoft AD/...")
+
+Boundary(client_relations, "Департамент по работе с клиентами") {
+    Person(manager, "Manager", "Менеджер")
+    Person(techsupport, "Technician", "Техподдержка")
+}
+
+
+Rel_U(smart_home_system, home, "Управляет устройствами в доме")
+Rel(smart_home_system, banking, "Оплата\nуслуг")
+Rel(smart_home_system, chatting, "Связь с техподдержкой")
+Rel(smart_home_system, ldap, "Аутентификация администраторов")
+
+Rel_R(user, home, "Устанавливает устройства в доме")
+Rel(user, smart_home_system, "Пользуется")
+
+Rel(manager, chatting, "Работает с клиентами")
+Rel_R(manager, techsupport, "Внутренняя коммуникация", "трекер задач")
+
+Rel(techsupport, smart_home_system, "Настраивает и администрирует")
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+!include <C4/C4_Context.puml>
+
+title ООО «Тёплый Дом» - Диаграмма контекстов - текущая система
+
+LAYOUT_WITH_LEGEND()
+SHOW_PERSON_OUTLINE()
+
+Boundary(user_property, "Собственность заказчика") {
+    Person_Ext(user, "User", "Клиент")
+    System_Ext(home, "Home", "Дом клиента")
+}
+
+Person(manager, "Manager", "Менеджер")
+Person(installer, "Technician", "Монтажник")
+
+System(smart_home_system, "«Тёплый Дом»", "Система управления отоплением в доме")
+' System_Ext(temp_api, "API датчиков", "получение температуры")
+System_Ext(temp_api, "API\nдатчиков", "получение\nтемпературы")
+
+Rel_R(user, home, "Владеет домом")
+Rel_U(user, manager, "Заказывает услуги")
+Rel(user, smart_home_system, "Пользуется системой")
+
+Rel(manager, installer, "Координирует установку")
+
+Rel_L(installer, home, "Монтирует отопление в доме")
+Rel(installer, smart_home_system, "Регистрирует оборудование")
+
+Rel_U(smart_home_system, home, "Управляет отоплением в доме")
+Rel_U(smart_home_system, temp_api, "Получает температуру")
+
+Rel_U(temp_api, home, "Получает температуру")
+
+@enduml

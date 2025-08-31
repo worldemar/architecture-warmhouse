@@ -1,0 +1,93 @@
+@startuml
+
+Struct DeviceMeasurement {
+    +id: uint64_t
+    +device_id: uint64_t
+    +value: double
+    +unix_timestamp: uint64_t
+    +unit: str
+}
+
+Struct Device {
+    +id: uint64_t
+    +name: str
+    +type: str
+    +address: str
+}
+
+Struct DeviceState {
+    +id: uint64_t
+    +device_id: uint64_t
+    +state: str
+    +unix_timestamp: uint64_t
+}
+
+DeviceMeasurement --> Device : device_id = Device.id
+DeviceState --> Device : device_id = Device.id
+
+Class DataBus {
+    +ctor(): DataBus
+    +connect(str addr, int port): DataBusConnection
+}
+
+Class DataBusConnection {
+    +registerDeviceListReceiver(deviceListReceiver): void
+    +registerDeviceMeasurementPublisher(deviceMeasurementPublisher): void
+    +registerDeviceStatePublisher(deviceStatePublisher): void
+}
+
+Class DeviceProtocolAdapter {
+    -receiveThread: Thread
+    -parseDeviceProtocolMessage(str message): void
+    +updateDeviceList(List[Device] deviceList): void
+    +ctor(str address, int port): DeviceProtocolAdapter
+}
+
+Class DeviceListReceiver {
+    -list: List[Device]
+    +ctor(): DeviceListReceiver
+    +deviceListReceived(List[Device]): void
+}
+
+Class DeviceMeasurementPublisher {
+    -queue: Queue[DeviceMeasurement]
+    +ctor(): DeviceMeasurementPublisher
+    +pop(): List[Device]
+    +publishDeviceMeasurement(DeviceMeasurement measurement): void
+}
+
+Class DeviceStatePublisher {
+    -queue: Queue[DeviceState]
+    +ctor(): DeviceStatePublisher
+    +pop(): List[DeviceState]
+    +publishDeviceState(DeviceState state): void
+}
+
+Class Gateway {
+    +ctor(): Gateway
+    +start(): void
+    +stop(): void
+}
+
+Gateway --|> DataBus : creates
+Gateway --|> DeviceProtocolAdapter : creates
+Gateway --|> DeviceMeasurementPublisher : creates
+Gateway --|> DeviceStatePublisher : creates
+Gateway --|> DeviceListReceiver : creates
+Gateway ----> DataBusConnection : calls
+
+DataBus }--|> DataBusConnection : creates
+
+DataBusConnection ----> DeviceListReceiver : calls
+DataBusConnection ----> DeviceMeasurementPublisher : calls
+DataBusConnection ----> DeviceStatePublisher : calls
+
+DeviceListReceiver ----> DeviceProtocolAdapter : calls
+
+DeviceProtocolAdapter ----> DeviceMeasurementPublisher : calls
+DeviceProtocolAdapter ----> DeviceStatePublisher : calls
+
+
+
+
+@enduml
